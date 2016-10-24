@@ -7,13 +7,20 @@ QMAIL_LOG_DIR="/var/log/qmail"
 QMAIL_DL_URL="http://www.qmail.org/netqmail-1.06.tar.gz"
 UCSPI_DL_URL="http://cr.yp.to/ucspi-tcp/ucspi-tcp-0.88.tar.gz"
 DAEMONTOOLS_DL_URL="http://cr.yp.to/daemontools/daemontools-0.76.tar.gz"
+CHANNEL_PATCH_URL="http://www.thesmbexchange.com/eng/netqmail-1.06-channels.patch"
+BIG_DNS_PATCH_URL="https://www.ckdhr.com/ckd/qmail-103.patch"
 
 
 ## QMAIL INSTALL BASED ON LWQ ##
 mkdir /usr/src ${QMAIL_HOME} && cd /usr/src
 curl ${QMAIL_DL_URL} -o netqmail-1.06.tar.gz
+curl ${CHANNEL_PATCH_URL} -o netqmail-1.06-channels.patch
+curl ${BIG_DNS_PATCH_URL} -o qmail-103.patch
 tar zxf netqmail-1.06.tar.gz
 cd netqmail-1.06
+patch < ../netqmail-1.06-channels.patch
+patch < ../qmail-103.patch
+
 
 adduser qmaild -g nofiles -h ${QMAIL_HOME} -s /sbin/nologin -D
 adduser alias -g nofiles -h ${QMAIL_HOME}/alias -s /sbin/nologin -D
@@ -61,8 +68,6 @@ echo "./Maildir" > ${QMAIL_HOME}/control/defaultdelivery
 echo "mx01.domain.local" > ${QMAIL_HOME}/control/me
 echo "mx01.domain.local" > ${QMAIL_HOME}/control/locals
 echo "mx01.domain.local" > ${QMAIL_HOME}/control/rcpthosts
-echo "100" > ${QMAIL_HOME}/control/concurrencyincoming
-chmod 644 ${QMAIL_HOME}/control/concurrencyincoming
 
 
 cat > /var/qmail/bin/qmailctl <<EOF
@@ -108,7 +113,15 @@ case \$1 in
     svstat /service/qmail-send/log
     svstat /service/qmail-smtpd
     svstat /service/qmail-smtpd/log
+    echo "QUEUE STATUS"
     qmail-qstat
+    echo "" && echo -n "Microsoft "
+    qmail-qstat0
+    echo -n "Yahoo "
+    qmail-qstat1
+    echo -n "Gmail "
+    qmail-qstat2
+    echo ""
     ;;
   doqueue|alrm|flush)
     echo "Flushing timeout table and sending ALRM signal to qmail-send."
@@ -118,6 +131,15 @@ case \$1 in
   queue)
     qmail-qstat
     qmail-qread
+    ;;
+  queue-microsoft)
+    qmail-qread0
+    ;;
+  queue-yahoo)
+    qmail-qread1
+    ;;
+  queue-gmail)
+    qmail-qread2
     ;;
   reload|hup)
     echo "Sending HUP signal to qmail-send."
@@ -238,3 +260,196 @@ cat > /etc/tcp.smtp <<EOF
 EOF
 tcprules /etc/tcp.smtp.cdb /etc/tcp.smtp.tmp < /etc/tcp.smtp
 chmod 644 /etc/tcp.smtp.cdb
+
+# Channel patch configuration
+
+cat > /var/qmail/control/suppls0 <<EOF
+bing.com
+bing.net
+bing.co.uk
+bing.co
+bingbar.com
+bingbar.net
+bingtoolbar.com
+hotmail.com
+hotmail.co.uk
+hotmail.eu
+hotmail.co
+hotmail.net
+hotmail.org
+live.com
+live.co.uk
+live.net
+live.co
+live.org
+live.eu
+internetexplorer.com
+internetexplorer.co
+ie8.co
+ie9.com
+ie10.com
+ie11.com
+mepn.com
+microsoft.com
+msdn.com
+microsoftsilverlight.com
+microsoftsilverlight.org
+microsoftsilverlight.net
+microsoftsqlserver.com
+sqlserver.net
+microsoftvisualstudio.com
+microsoftvisualstudio.net
+visualstudio.com
+visualstudio.co.uk
+visualstudio.net
+visualstudio.eu
+visualstudio.co
+skydrive.com
+skydrive.co
+onedrive.com
+onedrive.co.uk
+onedrive.net
+onedrive.org
+onedrive.co
+onedrive.eu
+1drv.ms
+skype.com
+skype.org
+skype.net
+skype.co.uk
+skype.co
+skype.eu
+outlook.com
+outlook.org
+outlook.co
+outlook.eu
+windowsmobile.com
+windowsmobile.co.uk
+windowsmobile.org
+windowsmobile.co
+windowsmobile.eu
+windowsphone.com
+windowsphone.co.uk
+windowsphone.org
+windowsphone.co
+windowsphone.net
+zune.com
+zune.co.uk
+zune.org
+zune.net
+zune.co
+zune.eu
+xbox.com
+xbox.co.uk
+xbox.org
+xbox.co
+xbox.eu
+xbox360.com
+xbox360.co.uk
+xbox360.co
+xbox360.eu
+xbox360.org
+xboxone.com
+xboxone.co.uk
+xboxone.co
+xboxone.eu
+office.com
+microsoftonline.com
+microsoft.com
+microsoft.org
+microsoft.net
+microsoft.co.uk
+microsoft.co
+microsoft.nl
+microsoft.it
+outlook.it
+skype.it
+live.it
+hotmail.it
+microsoft.de
+outlook.de
+skype.de
+live.de
+hotmail.de
+microsoft.fr
+outlook.fr
+skype.fr
+live.fr
+hotmail.fr
+microsoft.dk
+outlook.dk
+skype.dk
+live.dk
+hotmail.dk
+outlook.com.au
+EOF
+
+cat > /var/qmail/control/suppls1 <<EOF
+yahoo.com
+yahoo.com.tr
+yahoo.co.uk
+yahoo.co.jp
+yahoo.co.kr
+yahoo.co.id
+yahoo.co.in
+yahoo.com.sg
+yahoo.com.ph
+EOF
+
+
+cat > /var/qmail/control/suppls2 <<EOF
+gmail.com
+googlemail.com
+EOF
+
+echo "100" > ${QMAIL_HOME}/control/concurrencyincoming
+echo "50" > ${QMAIL_HOME}/control/concurrencyremote
+echo "5" > ${QMAIL_HOME}/control/concurrencysuppl0
+echo "10" > ${QMAIL_HOME}/control/concurrencysuppl1
+echo "10" > ${QMAIL_HOME}/control/concurrencysuppl2
+chmod 644 ${QMAIL_HOME}/control/concurrency*
+chmod 644 ${QMAIL_HOME}/control/suppls*
+
+cat > ${QMAIL_HOME}/bin/qmail-qstat0 <<EOF
+#!/bin/sh
+cd ${QMAIL_HOME}
+messdirs=\`echo queue/suppl0/* | wc -w\`
+messfiles=\`find queue/suppl0/* -print | wc -w\`
+echo messages in queue: \`expr $messfiles - $messdirs\`
+EOF
+
+cat > ${QMAIL_HOME}/bin/qmail-qstat1 <<EOF
+#!/bin/sh
+cd ${QMAIL_HOME}
+messdirs=\`echo queue/suppl1/* | wc -w\`
+messfiles=\`find queue/suppl1/* -print | wc -w\`
+echo messages in queue: \`expr $messfiles - $messdirs\`
+EOF
+
+cat > ${QMAIL_HOME}/bin/qmail-qstat2 <<EOF
+#!/bin/sh
+cd ${QMAIL_HOME}
+messdirs=\`echo queue/suppl2/* | wc -w\`
+messfiles=\`find queue/suppl2/* -print | wc -w\`
+echo messages in queue: \`expr $messfiles - $messdirs\`
+EOF
+
+cat > ${QMAIL_HOME}/bin/qmail-qread0 <<EOF
+#!/bin/sh
+find /var/qmail/queue/suppl0/ -type f |xargs cut -c 2-
+EOF
+
+cat > ${QMAIL_HOME}/bin/qmail-qread1 <<EOF
+#!/bin/sh
+find /var/qmail/queue/suppl1/ -type f |xargs cut -c 2-
+EOF
+
+cat > ${QMAIL_HOME}/bin/qmail-qread2 <<EOF
+#!/bin/sh
+find /var/qmail/queue/suppl2/ -type f |xargs cut -c 2-
+EOF
+
+cd ${QMAIL_HOME}/bin
+chmod +x qmail-qstat* && chmod +x ${QMAIL_HOME}/bin/qmail-qread*
+
+cd ~
