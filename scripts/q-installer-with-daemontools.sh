@@ -8,15 +8,18 @@ QMAIL_DL_URL="http://www.qmail.org/netqmail-1.06.tar.gz"
 UCSPI_DL_URL="http://cr.yp.to/ucspi-tcp/ucspi-tcp-0.88.tar.gz"
 DAEMONTOOLS_DL_URL="http://cr.yp.to/daemontools/daemontools-0.76.tar.gz"
 CHANNEL_PATCH_URL="http://www.thesmbexchange.com/eng/netqmail-1.06-channels.patch"
+BIG_DNS_PATCH_URL="https://www.ckdhr.com/ckd/qmail-103.patch"
 
 
 ## QMAIL INSTALL BASED ON LWQ ##
 mkdir /usr/src ${QMAIL_HOME} && cd /usr/src
 curl ${QMAIL_DL_URL} -o netqmail-1.06.tar.gz
 curl ${CHANNEL_PATCH_URL} -o netqmail-1.06-channels.patch
+curl ${CHANNEL_PATCH_URL} -o qmail-103.patch
 tar zxf netqmail-1.06.tar.gz
 cd netqmail-1.06
 patch < ../netqmail-1.06-channels.patch
+patch < ../qmail-103.patch
 
 
 adduser qmaild -g nofiles -h ${QMAIL_HOME} -s /sbin/nologin -D
