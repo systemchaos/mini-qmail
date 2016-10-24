@@ -450,4 +450,3 @@ cd ${QMAIL_HOME}/bin
 chmod +x qmail-qstat* && chmod +x ${QMAIL_HOME}/bin/qmail-qread*
 
 cd ~
-
