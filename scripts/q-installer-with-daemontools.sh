@@ -2,14 +2,7 @@
 
 set -e
 
-QMAIL_HOME="/var/qmail"
-QMAIL_LOG_DIR="/var/log/qmail"
-QMAIL_DL_URL="http://www.qmail.org/netqmail-1.06.tar.gz"
-UCSPI_DL_URL="http://cr.yp.to/ucspi-tcp/ucspi-tcp-0.88.tar.gz"
-DAEMONTOOLS_DL_URL="http://cr.yp.to/daemontools/daemontools-0.76.tar.gz"
-CHANNEL_PATCH_URL="http://www.thesmbexchange.com/eng/netqmail-1.06-channels.patch"
-BIG_DNS_PATCH_URL="https://www.ckdhr.com/ckd/qmail-103.patch"
-
+source env
 
 ## QMAIL INSTALL BASED ON LWQ ##
 mkdir /usr/src ${QMAIL_HOME} && cd /usr/src
