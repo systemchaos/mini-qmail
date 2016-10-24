@@ -15,7 +15,7 @@ BIG_DNS_PATCH_URL="https://www.ckdhr.com/ckd/qmail-103.patch"
 mkdir /usr/src ${QMAIL_HOME} && cd /usr/src
 curl ${QMAIL_DL_URL} -o netqmail-1.06.tar.gz
 curl ${CHANNEL_PATCH_URL} -o netqmail-1.06-channels.patch
-curl ${CHANNEL_PATCH_URL} -o qmail-103.patch
+curl ${BIG_DNS_PATCH_URL} -o qmail-103.patch
 tar zxf netqmail-1.06.tar.gz
 cd netqmail-1.06
 patch < ../netqmail-1.06-channels.patch
