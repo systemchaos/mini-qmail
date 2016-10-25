@@ -1,6 +1,6 @@
 # This is an alpine linux based tiny qmail server image
 # It includes only smtp and send daemon that managed by supervisor.
-FROM alpine:3.4
+FROM debian
 
 MAINTAINER Cagri Ersen <cagri.ersen@secopstech.io>
 
