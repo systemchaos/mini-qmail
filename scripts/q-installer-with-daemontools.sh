@@ -5,7 +5,7 @@ set -e
 source env
 
 ## QMAIL INSTALL BASED ON LWQ ##
-mkdir /usr/src ${QMAIL_HOME} && cd /usr/src
+mkdir /usr/src ${QMAIL_HOME}; cd /usr/src
 curl ${QMAIL_DL_URL} -o netqmail-1.06.tar.gz
 curl ${CHANNEL_PATCH_URL} -o netqmail-1.06-channels.patch
 curl ${BIG_DNS_PATCH_URL} -o qmail-103.patch
