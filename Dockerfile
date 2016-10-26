@@ -8,7 +8,7 @@ ADD ./scripts /scripts
 
 RUN apk --no-cache add build-base openssl openssl-dev curl groff && \
     chmod +x /scripts/* && \
-    /scripts/q-installer-with-daemontools.sh && \
+    sh /scripts/q-installer-with-daemontools.sh && \
     rm -rf /usr/src/* && \
     rm -f /package/*.tar.gz && \
     apk --no-cache del build-base curl groff && \
