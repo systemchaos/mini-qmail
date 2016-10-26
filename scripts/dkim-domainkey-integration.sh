@@ -3,72 +3,41 @@
 source env
 
 # Installation
-cd /usr/src
-apk --no-cache add curl openssl-dev libstdc++ make g++
-curl http://heanet.dl.sourceforge.net/project/libdkim/libdkim/1.0.21/libdkim-1.0.21.zip -o libdkim-1.0.21.zip
-curl http://patchlog.com/wp-content/uploads/2007/05/libdkim.patch -o libdkim.patch
-curl http://patchlog.com/wp-content/uploads/2007/05/libdkim2.patch -o libdkim2.patch
-curl http://netassist.dl.sourceforge.net/project/domainkeys/libdomainkeys/0.69/libdomainkeys-0.69.tar.gz -o libdomainkeys-0.69.tar.gz
+mkdir /usr/src; cd /usr/src
+curl ${LIBDKIM_DL_URL} -o libdkim-1.0.19-patched.tgz
+curl ${LIBDOMAINKEY_DL_URL} -o libdomainkeys-0.69.tar.gz
 tar xvf libdomainkeys-0.69.tar.gz
 cd libdomainkeys-0.69
 make
 cp dktest /usr/local/bin/
+cp libdomainkeys.a /usr/local/lib
+cp domainkeys.h dktrace.h  /usr/local/include
+cp domainkeys.h dktrace.h  /usr/include/
 chown root:root /usr/local/bin/dktest
 chmod +x /usr/local/bin/dktest
 cd ../
-unzip  libdkim-1.0.21.zip
-cd libdkim
-patch -p1 < ../libdkim.patch
-patch -p1 < ../libdkim2.patch
-cd src/
+tar xfz libdkim-1.0.19-patched.tgz
+cd libdkim-1.0.19-patched/src
 make LINUX=y
 cp libdkimtest /usr/local/bin
+chmod +x /usr/local/bin/libdkimtest
 
 # Configuration
 cd /usr/src
-curl https://www.syslogs.org/downloads/domainkey -o generate-domainkey.sh
+curl ${DOMAINKEY_GENERATOR} -o generate-domainkey.sh
 
-sh generate-domainkey.sh domain.com genel
+# This will create a keypair for "default.domain" with a selector named "genel"
+# and the qmail sign every email with this key and selector
+# so you need to create a TXT record as explained in /tmp/DKIM_TXT_RECORD_INFO.txt
+# for your domain.
+sh generate-domainkey.sh default.domain genel > /tmp/DKIM_TXT_RECORD_INFO.txt
+sed -i -e 's#genel._domainkey.default.domain#genel._domainkey.YOURDOMAIN.TLD#' \
+/tmp/DKIM_TXT_RECORD_INFO.txt
 
 ${QMAIL_HOME}/bin/qmailctl stop
-
 mv ${QMAIL_HOME}/bin/qmail-remote ${QMAIL_HOME}/bin/qmail-remote.orig
-
-cat > ${QMAIL_HOME}/bin/qmail-remote <<EOF
-#!/bin/sh
-# version 7
-PATH=/bin:/usr/bin:/usr/local/bin
-
-DOMAIN=\${2##*@}
-[ "\$DKREMOTE" ] || DKREMOTE="/var/qmail/bin/qmail-remote.orig"
-[ "\$SELECTOR" ] || SELECTOR=\$(cat "/etc/domainkeys/\$DOMAIN/selector")
-[ "\$DKSIGN" ] || DKSIGN="/etc/domainkeys/\$DOMAIN/rsa.private_\$SELECTOR"
-
-if [ -r "\$DKSIGN" ] ; then
-
-        tmp=\`mktemp -t dk.sign.XXXXXXXXXXXXXXXXXXX\`
-        tmp2=\`mktemp -t dk2.sign.XXXXXXXXXXXXXXXXXXX\`
-        tmp3=\`mktemp -t dk3.sign.XXXXXXXXXXXXXXXXXXX\`
-        tmp4=\`mktemp -t dk4.sign.XXXXXXXXXXXXXXXXXXX\`
-        /bin/cat - >"\$tmp"
-
-        /usr/local/bin/dktest -s "\$DKSIGN" -c nofws d="\$DOMAIN" -h <"\$tmp" >> "\$tmp2" 2>&1
-
-        (/bin/cat "\$tmp2" "\$tmp" |tr -d "\\015") > "\$tmp3"
-
-        /usr/local/bin/libdkimtest -d"\$DOMAIN" -y"\$SELECTOR" -z1 -s "\$tmp3" "\$DKSIGN" "\$tmp4" 2>/dev/null
-
-        (/bin/cat "\$tmp4" |tr -d "\\015") | "\$DKREMOTE" "\$\@"
-        retval=\$\?
-                rm "\$tmp" "\$tmp2" "\$tmp3" "\$tmp4"
-        exit \$\retval
-else
-        # No signature added
-        exec "\$DKREMOTE" "\$\@"
-fi
-EOF
-
+cp /scripts/qmail-remote-wrapper.sh ${QMAIL_HOME}/bin/qmail-remote
 chown root:qmail ${QMAIL_HOME}/bin/qmail-remote
 chmod 755 ${QMAIL_HOME}/bin/qmail-remote
-
-apk --no-cache del curl openssl-dev libstdc++ make g++
+${QMAIL_HOME}/bin/qmailctl start
+cd ~
