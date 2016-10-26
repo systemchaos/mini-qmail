@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 source /scripts/env
 
 # Installation
