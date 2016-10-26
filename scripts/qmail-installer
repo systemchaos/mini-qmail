@@ -14,7 +14,7 @@ tar zxf netqmail-1.06.tar.gz
 cd netqmail-1.06
 patch < ../netqmail-1.06-channels.patch
 patch < ../qmail-103.patch
-
+sed -i -e 's#^22#8#g' conf-channels
 
 adduser qmaild -g nofiles -h ${QMAIL_HOME} -s /sbin/nologin -D
 adduser alias -g nofiles -h ${QMAIL_HOME}/alias -s /sbin/nologin -D
