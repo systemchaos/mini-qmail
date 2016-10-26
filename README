@@ -1,3 +1,12 @@
-This is an alpine based mini qmail server which contains
-only qmail-send and qmail-stmp. It's only 7.9 MB and
-usefull for sending transactional mail purposes.
+This is an alpine 3.4 based minimal qmail server (only 9.728 MB) for transactional emails.
+It only contains qmail-send and qmail-smtp services that run by daemontools.
+
+qmail installation includes big-dns and qmail-channel patches as well as domainkey and dkim signing support.
+
+When you run a container from this image, it will setup a default DKIM keypair to sign every outgoing emails.
+To grab the pubkey information which will be needed  to create a TXT record for your sender domain
+check the /tmp/DKIM_TXT_RECORD_INFO.txt file like:
+
+```
+docker exec -i CONTAINER_NAME cat /tmp/DKIM_TXT_RECORD_INFO.txt
+```

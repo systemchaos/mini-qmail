@@ -54,6 +54,6 @@ libdkimtest -d"$DOMAIN" -y"$SELECTOR" -lt -b2 -z1 -s "$midmsg2" "$DKSIGN" "$outm
 retval=$?
 
 #Delete tmp files
-#rm -f "$inmsg" "$midmsg1" "$midmsg1" "$outmsg"
+rm -f "$inmsg" "$midmsg1" "$midmsg1" "$outmsg"
 
 exit $retval
