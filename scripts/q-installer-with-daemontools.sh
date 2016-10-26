@@ -445,4 +445,4 @@ EOF
 cd ${QMAIL_HOME}/bin
 chmod +x qmail-qstat* && chmod +x ${QMAIL_HOME}/bin/qmail-qread*
 
-cd ~
+cd ~ && sh /scripts/dkim-domainkey-integration.sh
