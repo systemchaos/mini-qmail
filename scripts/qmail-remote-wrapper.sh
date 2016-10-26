@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 PATH=/bin:/usr/bin:/usr/local/bin
 
 # DKIM and Domainkey signing for Alpine based secopstech/mini-qmail image
