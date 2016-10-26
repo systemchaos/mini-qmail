@@ -8,7 +8,7 @@ ADD ./scripts /scripts
 
 RUN apk --no-cache add libstdc++ gcc make g++ openssl openssl-dev curl groff && \
     chmod +x /scripts/* && \
-    sh /scripts/q-installer-with-daemontools.sh && \
+    sh /scripts/qmail-installer && \
     rm -rf /usr/src/* && \
     rm -f /package/*.tar.gz && \
     apk --no-cache del gcc make g++ openssl openssl-dev curl groff && \

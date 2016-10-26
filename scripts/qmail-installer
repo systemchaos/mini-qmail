@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -e
 
+# Get the variables
 source /scripts/env
 
-## QMAIL INSTALL BASED ON LWQ ##
+## Qmail installation Based on LWQ ##
 mkdir /usr/src ${QMAIL_HOME} && cd /usr/src
 curl ${QMAIL_DL_URL} -o netqmail-1.06.tar.gz
 curl ${CHANNEL_PATCH_URL} -o netqmail-1.06-channels.patch
@@ -445,4 +446,4 @@ EOF
 cd ${QMAIL_HOME}/bin
 chmod +x qmail-qstat* && chmod +x ${QMAIL_HOME}/bin/qmail-qread*
 
-cd ~ && sh /scripts/dkim-domainkey-integration.sh
+cd ~ && sh /scripts/dkim-setup

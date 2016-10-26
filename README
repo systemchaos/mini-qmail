@@ -4,7 +4,7 @@ It only contains qmail-send and qmail-smtp services that run by daemontools.
 qmail installation includes big-dns and qmail-channel patches as well as domainkey and dkim signing support.
 
 When you run a container from this image, it will setup a default DKIM keypair to sign every outgoing emails.
-To grab the pubkey information which will be needed  to create a TXT record for your sender domain
+To grab the pubkey information which will be needed to create a TXT record for your sender domain(s)
 check the /tmp/DKIM_TXT_RECORD_INFO.txt file like:
 
 ```
