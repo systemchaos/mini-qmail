@@ -1,9 +1,9 @@
 #!/bin/sh
 
-source env
+source /scripts/env
 
 # Installation
-mkdir /usr/src; cd /usr/src
+cd /usr/src
 curl ${LIBDKIM_DL_URL} -o libdkim-1.0.19-patched.tgz
 curl ${LIBDOMAINKEY_DL_URL} -o libdomainkeys-0.69.tar.gz
 tar xvf libdomainkeys-0.69.tar.gz
@@ -11,7 +11,6 @@ cd libdomainkeys-0.69
 make
 cp dktest /usr/local/bin/
 cp libdomainkeys.a /usr/local/lib
-cp domainkeys.h dktrace.h  /usr/local/include
 cp domainkeys.h dktrace.h  /usr/include/
 chown root:root /usr/local/bin/dktest
 chmod +x /usr/local/bin/dktest
