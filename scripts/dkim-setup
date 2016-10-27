@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-PATH=/bin:/usr/bin:/usr/local/bin
+PATH=/bin:/usr/bin:/usr/sbin:/usr/local/bin
 
 set -e
 
