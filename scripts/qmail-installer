@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+PATH=/bin:/usr/bin:/usr/local/bin
 set -e
 
 # Get the variables
@@ -409,7 +409,7 @@ cat > ${QMAIL_HOME}/bin/qmail-qstat0 <<EOF
 cd ${QMAIL_HOME}
 messdirs=\`echo queue/suppl0/* | wc -w\`
 messfiles=\`find queue/suppl0/* -print | wc -w\`
-echo messages in queue: \`expr $messfiles - $messdirs\`
+echo messages in queue: \`expr \$messfiles - \$messdirs\`
 EOF
 
 cat > ${QMAIL_HOME}/bin/qmail-qstat1 <<EOF
@@ -417,7 +417,7 @@ cat > ${QMAIL_HOME}/bin/qmail-qstat1 <<EOF
 cd ${QMAIL_HOME}
 messdirs=\`echo queue/suppl1/* | wc -w\`
 messfiles=\`find queue/suppl1/* -print | wc -w\`
-echo messages in queue: \`expr $messfiles - $messdirs\`
+echo messages in queue: \`expr \$messfiles - \$messdirs\`
 EOF
 
 cat > ${QMAIL_HOME}/bin/qmail-qstat2 <<EOF
@@ -425,25 +425,45 @@ cat > ${QMAIL_HOME}/bin/qmail-qstat2 <<EOF
 cd ${QMAIL_HOME}
 messdirs=\`echo queue/suppl2/* | wc -w\`
 messfiles=\`find queue/suppl2/* -print | wc -w\`
-echo messages in queue: \`expr $messfiles - $messdirs\`
+echo messages in queue: \`expr \$messfiles - \$messdirs\`
 EOF
 
 cat > ${QMAIL_HOME}/bin/qmail-qread0 <<EOF
 #!/bin/sh
-find /var/qmail/queue/suppl0/ -type f |xargs cut -c 2-
+# MS qread
+for i in \`egrep -ir "hotmail|outlook|live.c|windows|" /var/qmail/queue/suppl0/*\`; do
+	remote=\`echo $i |sed 's#:T# #g' |awk '{print $2}'\`
+	info=\`echo $i |sed 's#:T# #g' |awk '{print $1}' |sed 's#/suppl0/#/info/#g'\`
+	sender=\`cat $info\`
+	echo From: "$sender" To: "$remote" |sed 's#: F#: #'
+done
 EOF
 
 cat > ${QMAIL_HOME}/bin/qmail-qread1 <<EOF
 #!/bin/sh
-find /var/qmail/queue/suppl1/ -type f |xargs cut -c 2-
+# Yahoo qread
+for i in \`egrep -ir yahoo /var/qmail/queue/suppl1/*\`; do
+	remote=\`echo $i |sed 's#:T# #g' |awk '{print $2}'\`
+	info=\`echo $i |sed 's#:T# #g' |awk '{print $1}' |sed 's#/suppl1/#/info/#g'\`
+	sender=\`cat $info\`
+	echo From: "$sender" To: "$remote" |sed 's#: F#: #'
+done
 EOF
 
 cat > ${QMAIL_HOME}/bin/qmail-qread2 <<EOF
 #!/bin/sh
-find /var/qmail/queue/suppl2/ -type f |xargs cut -c 2-
+# Google qread
+for i in \`egrep -ir "google|gmail"/var/qmail/queue/suppl2/*\`; do
+	remote=\`echo $i |sed 's#:T# #g' |awk '{print $2}'\`
+	info=\`echo $i |sed 's#:T# #g' |awk '{print $1}' |sed 's#/suppl2/#/info/#g'\`
+	sender=\`cat $info\`
+	echo From: "$sender" To: "$remote" |sed 's#: F#: #'
+done
 EOF
 
 cd ${QMAIL_HOME}/bin
 chmod +x qmail-qstat* && chmod +x ${QMAIL_HOME}/bin/qmail-qread*
 
-cd ~ && sh /scripts/dkim-setup
+ln -s /scripts/qmail-configurator /usr/bin/qmail-configurator
+sh /scripts/dkim-setup
+cd ~
