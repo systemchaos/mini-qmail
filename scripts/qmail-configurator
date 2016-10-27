@@ -12,17 +12,28 @@ case "$1" in
               echo "$FQDN" | tee ${QMAIL_HOME}/control/me ${QMAIL_HOME}/control/locals ${QMAIL_HOME}/control/rcpthosts >/dev/null
               qmailctl restart
           else
-              echo -e "You need to enter a valid hostname, domain or FQDN."
-              echo -e "NOTE: The best option is providing FQDN with a valid A and PTR record to gain better reputation from important vendors like gmail.com."
-              exit 1
+                echo "Usage:  qmail-configurator set-fqdn "host|fqdn|domain""
+                echo "Eg:     qmail-configurator set-fqdn my.domain.com"
+                echo ""
+                echo "NOTE: The best option is providing FQDN with a valid A and PTR record"
+                echo "to gain better reputation from important email service providers like gmail.com."
+                exit 1
           fi
       else
-          echo -e "You need to enter a hostname, domain or FQDN."
-          echo -e "NOTE: The best option is providing FQDN with a valid A and PTR record to gain better reputation from important email like gmail.com."
+            echo "Usage:  qmail-configurator set-fqdn "host|fqdn|domain""
+            echo "Eg:     qmail-configurator set-fqdn my.domain.com"
+            echo ""
+            echo "NOTE: The best option is providing FQDN with a valid A and PTR record"
+            echo "to gain better reputation from important email service providers like gmail.com."
           exit 1
       fi
       ;;
-  relayclient)
+  show-relay)
+      echo "GRANTED RELAYS"
+      echo "##############"
+      sed "s/:allow.*//" /etc/tcp.smtp
+      ;;
+  add-relay)
       IPRANGE="$2"
       if [[ -n "$IPRANGE" ]]; then
           VALIDIPRANGE='(^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1,3}$)';
@@ -31,33 +42,101 @@ case "$1" in
               qmailctl cdb
               echo "Relay has been granted for "$IPRANGE""
           else
-              echo -e "You need to enter a valid IP or IP range for tcp.smtp relayclient."
-              echo -e "To specify a single IP addess: 1.2.3.4"
-              echo -e "And for a subnet: 1.2.3. or 1.2. etc."
-              exit 1
+             echo "Usage:  qmail-configurator add-relay "ip|range""
+             echo "Eg:     qmail-configurator add-relay 1.2.3.4 or 1.2.3."
+             exit 1
           fi
       else
-          echo -e "You need to enter an IP or IP range for tcp.smtp relayclient."
-          echo -e "To specify a single IP addess: 1.2.3.4"
-          echo -e "And for a subnet: 1.2.3. or 1.2. etc."
+          echo "Usage:  qmail-configurator add-relay "ip|range""
+          echo "Eg:     qmail-configurator add-relay 1.2.3.4 or 1.2.3."
           exit 1
+      fi
+      ;;
+  del-relay)
+      IPRANGE="$2"
+      if [[ -n "$IPRANGE" ]]; then
+          VALIDIPRANGE='(^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){1,3}$)';
+          if echo "$IPRANGE" |egrep -q "$VALIDIPRANGE"; then
+              RANGEPATTETN="^$IPRANGE:allow,"
+              egrep "$RANGEPATTETN" /etc/tcp.smtp >/dev/null
+
+              if [ $? -eq 0 ]; then
+                sed -i -e "/^$IPRANGE:allow,/d" /etc/tcp.smtp
+                qmailctl cdb
+                echo "Relay has been removed for "$IPRANGE""
+              else
+
+                echo "Relay not found for $IPRANGE"
+                echo ""
+                echo "Here are your current relay clients:"
+                sed "s/:allow.*//" /etc/tcp.smtp
+              fi
+          else
+            echo "Usage:  qmail-configurator del-relay "ip|range""
+            echo "Eg:     qmail-configurator add-relay 1.2.3.4 or 1.2.3."
+            exit 1
+          fi
+      else
+
+        echo "Usage:  qmail-configurator del-relay "ip|range""
+        echo "Eg:     qmail-configurator del-relay 1.2.3.4 or 1.2.3."
+        exit 1
       fi
       ;;
   throttle)
       THROTTLEDOMAIN="$2"
       CONCURRENTLIMIT="$3"
       if [[ -n "$THROTTLEDOMAIN" ]]; then
+          VALIDTHROTTLEDOMAIN='(google|microsoft|yahoo)'
+          VALIDCONCURRENTLIMIT='^[1-9][0-9]?$|^100$'
+          if echo "$THROTTLEDOMAIN" |egrep -q "$VALIDTHROTTLEDOMAIN"; then
+              if echo "$CONCURRENTLIMIT" |egrep -q "$VALIDCONCURRENTLIMIT"; then
 
-          echo "$THROTTLEDOMAIN"
-          echo "$CONCURRENTLIMIT"
+                if [[ $THROTTLEDOMAIN == "google" ]]; then
+
+                    echo "Concurrent connection limit has been set $CONCURRENTLIMIT for $THROTTLEDOMAIN"
+                    echo "$CONCURRENTLIMIT" > /var/qmail/control/concurrencysuppl2
+                    svc -h /service/qmail-send
+
+                elif [[ $THROTTLEDOMAIN == "microsoft" ]]; then
+
+                    echo "Concurrent connection limit has been set $CONCURRENTLIMIT for $THROTTLEDOMAIN"
+                    echo "$CONCURRENTLIMIT" > /var/qmail/control/concurrencysuppl0
+                    svc -h /service/qmail-send
+
+                elif [[ $THROTTLEDOMAIN == "yahoo" ]]; then
+
+                    echo "Concurrent connection limit has been set $CONCURRENTLIMIT for $THROTTLEDOMAIN"
+                    echo "$CONCURRENTLIMIT" > /var/qmail/control/concurrencysuppl1
+                    svc -h /service/qmail-send
+
+                else
+
+                    echo "Enter a valid provider (google|microsoft|yahoo)"
+
+                fi
+
+              else
+
+                echo "Concurrent limit should be between 1 and 100"
+
+              fi
+
+           else
+
+                echo "Usage:  qmail-configurator throttle google 99"
+                echo "This will set the concurrent limit 99 for gmail.com and google.com"
+                echo "Note: Limit should be between 1 and 100."
+
+          fi
+
       else
-          echo -e "You need to enter an IP or IP range for tcp.smtp relayclient."
-          echo -e "To specify a single IP addess: 1.2.3.4"
-          echo -e "And for a subnet: 1.2.3. or 1.2. etc."
-          exit 1
+
+        echo "Enter a valid (google|microsoft|yahoo)"
+        exit 1
       fi
       ;;
   *)
-      echo $"Usage: "$0" {set-fqdn|relayclient}"
+      echo "Usage: "$0" {set-fqdn|show-relay|add-relay|del-relay|throttle}"
       exit 1
 esac

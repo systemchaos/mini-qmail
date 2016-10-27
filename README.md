@@ -1,63 +1,106 @@
 Overview
 ========
 
-This is an alpine 3.4 based minimal qmail server (only 9.728 MB)
-It only contains qmail-send and qmail-smtp services that run by daemontools.
+ This is an alpine 3.4 based minimal qmail server (only 9~ MB) that only contains 
+qmail-send and qmail-smtp services which is usefull for transactional emails 
+like welcome messages, password resets etc.
 
-Default installation includes big-dns and qmail-channel patches as well as domainkey and dkim support,
-and qmail configured for three major email vendors (Gmail, Yahoo and MS) to throttle outbound delivery which 
-qmail will open 10 concurrent connections to these three vendors and for all the other outbound delivery concurrent 
-connection limit is 50 by default. To change the throttle settings, see "Throttle Settings" section below.
+ big-dns and qmail-channel patches are already applied and domainkey/dkim support
+is enabled by default for all outbound emails. For dkim/domainkey support details 
+see the DKIM/Domainkey Support section.
 
-How to
+ Also there is a default configuration to throttle outbound delivery to 3 major email
+service providers. (Gmail, Yahoo and MS). With default settings qmail will open 10 
+concurrent connections per provider and 50 for all the other domains. Controlling the 
+pace of the outbound emails to big vendors is important thing because fast delivery
+leads to ban issues especially new installed SMTP servers with a fresh IP. 
+So you can set the throttle values as small as possible at first to avoid blacklisting 
+and then increase them slowly week by week to gain good reputation. To change the
+throttling settings see the related section below.
+
+How To
 ======
 
-To create a container from this image, simple run:
+To create a container from this image simply run:
 
 ```
-docker run -d --name CONTAINER_NAME -t secopstech/mini-qmail
+docker run -d --name CONTAINER_NAME -p 25:25 -t secopstech/mini-qmail
 ```
 
-****Customizations****
+This will run a container with default qmail settings and expose 25/tcp to host.
+
+Customizations
+--------------
 
 You need to customize qmail installations for your environment. 
-For example you may want to change hostname and grant relay access to spesific IPs.
+For example you may want to change hostname and grant relay access to your sender IPs.
 
-***Change Hostname***
+**Change Hostname**
 
-In the base image, qmail's servername is mx01.domain.local by default which you want to change it with your FQDN.
-To do this, just trigger qmail-configurator with your FQDN like below:
+In the base image, qmail's servername is mx01.domain.local by default which you want 
+to change it with your FQDN. To do this, just trigger qmail-configurator with your 
+FQDN like below:
 
-
-```
-docker exec -i CONTAINER_NAME /scripts/qmail-configurator mx.foo.bar
-```
-
-This will configure the hostname as spesified FQDN and restart the services.
-
-***Relay Client***
-
-To grant relay access to a spesific IP or IP range, you can trigger qmail-configurator with relayclient paramater:
 
 ```
-# Granting access to an IP address
-docker exec -i CONTAINER_NAME /scripts/qmail-configurator 1.1.1.1
+docker exec -i CONTAINER_NAME qmail-configurator set-fqdn mx.foo.bar
+```
 
-# Or for all /24 IP range
-docker exec -i CONTAINER_NAME /scripts/qmail-configurator 2.2.2.
+This will configure the hostname as spesified value and restart the services.
+Valid values for "set-fqdn" option is: hostname - domain - FQDN. Note that, 
+using a valid FQDN (with proper DNS A and PTR records) is a better choise.
+
+**Relay Client**
+
+To grant relay access for an IP or IP range, you can trigger qmail-configurator
+with relay paramater:
+
+```
+# Grant access to an IP address or a subnet.
+docker exec -i CONTAINER_NAME qmail-configurator add-relay 1.2.3.4
+docker exec -i CONTAINER_NAME qmail-configurator add-relay 1.2.3.
+
+# Or you can remove relay for an IP or a subnet.
+docker exec -i CONTAINER_NAME qmail-configurator del-relay 1.2.3.4
+docker exec -i CONTAINER_NAME qmail-configurator del-relay 1.2.3.
+
+# To show the relayclients:
+docker exec -i CONTAINER_NAME qmail-configurator show-relay
 
 ```
 
 With this setup, qmail will accept outbound email requests from 1.1.1.1 and 2.2.2.0/24
 
+**Throttle Settings**
+
+By default outbound emails to google, yahoo and microsoft domains is limited to 10 for 
+each domain. 
+
+To change these values you can use throttle parameter like:
+
+```
+# Set concurrent limit to 30 for Yoogle domains (google.com, gmail.com)
+docker exec -i CONTAINER_NAME qmail-configurator throttle google 30
+
+# Set concurrent limit to 25 for Yahoo domains (yahoo.com, yahoo.co.uk etc.)
+docker exec -i CONTAINER_NAME qmail-configurator throttle yahoo 20
+
+# Set concurrent limit to 20 for Microsoft domains (hotmail, live, outlook etc.)
+docker exec -i CONTAINER_NAME qmail-configurator throttle microsoft 20
+```
+
+throttle parameter only takes google|yahoo|microsoft values as domain and concurrent limit
+number should be between 1 and 100.
+
 
 DKIM/Domainkey Support
 ======================
 
-When you run a container from this image, it will setup a default DKIM keypair to sign every outgoing emails.
-To grab the pubkey information which will be needed to create a TXT record for your sender domain(s)
-check the /tmp/DKIM_TXT_RECORD_INFO.txt file:
+When you run a container from this image, it will setup a default DKIM keypair to sign every
+outgoing emails. To grab the pubkey information which will be needed to create a TXT record 
+for your sender domain(s) check the /tmp/DKIM_TXT_RECORD_INFO.txt file:
 
 ```
 docker exec -i CONTAINER_NAME cat /tmp/DKIM_TXT_RECORD_INFO.txt
 ```
+
