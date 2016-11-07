@@ -252,7 +252,6 @@ ln -s /var/qmail/supervise/qmail-send /var/qmail/supervise/qmail-smtpd /service
 
 cat > /etc/tcp.smtp <<EOF
 127.:allow,RELAYCLIENT=""
-172.17.:allow,RELAYCLIENT=""
 EOF
 tcprules /etc/tcp.smtp.cdb /etc/tcp.smtp.tmp < /etc/tcp.smtp
 chmod 644 /etc/tcp.smtp.cdb
