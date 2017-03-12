@@ -28,7 +28,7 @@ docker run -d -t -p 25:25 \
  --name CONTAINER_NAME \
  --env="QMAIL_HOSTNAME=host.domain.ltd" \
  --env="RELAYIP=172.0.0." \
- secopstech/mini-qmail
+ secopstech/mini-qmail:0.2
 ```
 
 Note that if you don't pass QMAIL_HOSTNAME and RELAYIP parameters mx.domain.local will be used
