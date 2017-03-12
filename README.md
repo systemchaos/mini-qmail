@@ -24,23 +24,27 @@ How To
 To create a container from this image simply run:
 
 ```
-docker run -d --name CONTAINER_NAME -p 25:25 -t secopstech/mini-qmail
+docker run -d -t -p 25:25 \
+ --name CONTAINER_NAME \
+ --env="QMAIL_HOSTNAME=host.domain.ltd" \
+ --env="RELAYIP=172.0.0." \
+ secopstech/mini-qmail
 ```
 
-This will run a container with default qmail settings and expose 25/tcp to host.
+Note that if you don't pass QMAIL_HOSTNAME and RELAYIP parameters mx.domain.local will be used
+as qmail hostname and only 127.0.0.1 will be granted for relay.
+
 
 Customizations
 --------------
 
-You need to customize qmail installations for your environment. 
+To customize qmail configuration later, you can use qmail-configurator. 
 For example you may want to change hostname and grant relay access to your sender IPs.
 
 **Change Hostname**
 
-In the base image, qmail's servername is mx01.domain.local by default which you want 
-to change it with your FQDN. To do this, just trigger qmail-configurator with your 
+To change the hostname FQDN. To do this, just trigger qmail-configurator with your 
 FQDN like below:
-
 
 ```
 docker exec -i CONTAINER_NAME qmail-configurator set-fqdn mx.foo.bar

@@ -15,4 +15,6 @@ RUN apk --no-cache add libstdc++ gcc make g++ openssl openssl-dev curl groff && 
     rm -rf /var/cache/apk/*
 
 # This will use daemontools to start qmail
-CMD exec /command/svscanboot
+CMD qmail-configurator init-fqdn ${QMAIL_HOSTNAME}; \
+    qmail-configurator init-relay ${RELAYIP}; \
+    exec /command/svscanboot
